@@ -70,26 +70,6 @@
             border: none;
         }
 
-        #cameraSwitchContainer {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            text-align: center;
-            z-index: 999;
-        }
-
-        #cameraSwitchButton {
-            padding: 10px 20px;
-            border-radius: 5px;
-            background-color: #00BFFF;
-            color: #FFF;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            outline: none;
-            border: none;
-        }
-
         .a-enter-vr-button {
             display: none !important;
         }
@@ -118,14 +98,9 @@
         <button id="playPauseButton">Play with Sound</button>
     </div>
 
-    <!-- Camera Switch Button -->
-    <div id="cameraSwitchContainer">
-        <button id="cameraSwitchButton">Switch Camera</button>
-    </div>
-
     <!-- AR Scene -->
     <a-scene
-        mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; filterMinCF: 0.0001; filterBeta: 0.001"
+        mindar-image="imageTargetSrc: ./targets.mind"
         color-space="sRGB"
         renderer="colorManagement: true, physicallyCorrectLights"
         vr-mode-ui="enabled: false"
@@ -138,7 +113,7 @@
             <video id="braceletVideo" src="bracelet.mp4" playsinline loop></video>
         </a-assets>
 
-        <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
         <!-- Single Target -->
         <a-entity id="target1" mindar-image-target="targetIndex: 0">
@@ -154,10 +129,6 @@
         const confetti = document.querySelector('#confetti');
         const buyNowContainer = document.querySelector('#buyNowContainer');
         const buyNowButton = document.querySelector('#buyNowButton');
-        const cameraSwitchButton = document.querySelector('#cameraSwitchButton');
-
-        let currentCamera = 'rear';  // Default to rear camera
-        const mindarComponent = document.querySelector('a-scene').components['mindar-image'];
 
         // Jewelry videos
         const ringVideo = document.querySelector('#ringVideo');
@@ -224,30 +195,53 @@
             }
         });
 
-        // Play/Pause functionality
+        // Play/Pause Button functionality
         playPauseButton.addEventListener('click', () => {
-            if (isPlaying) {
+            if (currentVideo) {
+                if (currentVideo.paused) {
+                    currentVideo.muted = false;  // Unmute the video
+                    currentVideo.play();  // Play the video
+                    playPauseButton.textContent = 'Pause';
+                    isPlaying = true;
+                } else {
+                    currentVideo.pause();  // Pause the video
+                    playPauseButton.textContent = 'Play with Sound';
+                    isPlaying = false;
+                }
+            }
+        });
+
+        // Pause video when AR target is lost
+        const pauseVideo = () => {
+            if (isPlaying && currentVideo) {
                 currentVideo.pause();
+                currentVideo.muted = true;
                 playPauseButton.textContent = 'Play with Sound';
-            } else {
+                isPlaying = false;
+            }
+        };
+
+        // Event listeners for AR target
+        const target = document.querySelector('#target1');
+
+        target.addEventListener('targetFound', () => {
+            if (isPlaying && currentVideo) {
                 currentVideo.play();
-                playPauseButton.textContent = 'Pause';
             }
-            isPlaying = !isPlaying;
-        });
-
-        // Camera switch functionality
-        cameraSwitchButton.addEventListener('click', () => {
-            currentCamera = currentCamera === 'rear' ? 'front' : 'rear';
-            const camera = document.querySelector('#camera');
-            // Switch camera
-            if (currentCamera === 'front') {
-                mindarComponent.switchCamera('user'); // Switch to front camera
-            } else {
-                mindarComponent.switchCamera('environment'); // Switch to rear camera
+            confetti.setAttribute('visible', true);
+            confetti.emit();  // Show confetti
+            if (jewelrySelect.value) {
+                buyNowContainer.style.display = 'block';  // Show the Buy Now button when target is found and item is selected
+                playPauseButtonContainer.style.display = 'block'; // Show Play/Pause button when target is found
             }
         });
 
+        target.addEventListener('targetLost', () => {
+            pauseVideo();
+            buyNowContainer.style.display = 'none';  // Hide the Buy Now button when the target is lost
+            playPauseButtonContainer.style.display = 'none'; // Hide Play/Pause button when target is lost
+            confetti.setAttribute('visible', false);  // Hide confetti
+        });
     </script>
 </body>
 </html>
