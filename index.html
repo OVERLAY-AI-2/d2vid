@@ -224,65 +224,30 @@
             }
         });
 
-        // Play/Pause Button functionality
+        // Play/Pause functionality
         playPauseButton.addEventListener('click', () => {
-            if (currentVideo) {
-                if (currentVideo.paused) {
-                    currentVideo.muted = false;  // Unmute the video
-                    currentVideo.play();  // Play the video
-                    playPauseButton.textContent = 'Pause';
-                    isPlaying = true;
-                } else {
-                    currentVideo.pause();  // Pause the video
-                    playPauseButton.textContent = 'Play with Sound';
-                    isPlaying = false;
-                }
-            }
-        });
-
-        // Pause video when AR target is lost
-        const pauseVideo = () => {
-            if (isPlaying && currentVideo) {
+            if (isPlaying) {
                 currentVideo.pause();
-                currentVideo.muted = true;
                 playPauseButton.textContent = 'Play with Sound';
-                isPlaying = false;
-            }
-        };
-
-        // Event listeners for AR target
-        const target = document.querySelector('#target1');
-
-        target.addEventListener('targetFound', () => {
-            if (isPlaying && currentVideo) {
+            } else {
                 currentVideo.play();
+                playPauseButton.textContent = 'Pause';
             }
-            confetti.setAttribute('visible', true);
-            confetti.emit();  // Show confetti
-            if (jewelrySelect.value) {
-                buyNowContainer.style.display = 'block';  // Show the Buy Now button when target is found and item is selected
-                playPauseButtonContainer.style.display = 'block'; // Show Play/Pause button when target is found
-            }
-        });
-
-        target.addEventListener('targetLost', () => {
-            pauseVideo();
-            buyNowContainer.style.display = 'none';  // Hide the Buy Now button when the target is lost
-            playPauseButtonContainer.style.display = 'none'; // Hide Play/Pause button when the target is lost
-            confetti.setAttribute('visible', false);  // Hide confetti
+            isPlaying = !isPlaying;
         });
 
         // Camera switch functionality
         cameraSwitchButton.addEventListener('click', () => {
-            if (currentCamera === 'rear') {
-                currentCamera = 'front';  // Switch to front camera
-                mindarComponent.data.cameraId = 'environment';  // Use front camera
+            currentCamera = currentCamera === 'rear' ? 'front' : 'rear';
+            const camera = document.querySelector('#camera');
+            // Switch camera
+            if (currentCamera === 'front') {
+                mindarComponent.switchCamera('user'); // Switch to front camera
             } else {
-                currentCamera = 'rear';  // Switch to rear camera
-                mindarComponent.data.cameraId = 'user';  // Use rear camera
+                mindarComponent.switchCamera('environment'); // Switch to rear camera
             }
-            mindarComponent.update();  // Refresh MindAR component to apply changes
         });
+
     </script>
 </body>
 </html>
